@@ -9,8 +9,11 @@ st.title("🌐 Gemini CPI 深度分析與總經預測儀表板")
 
 # 2. 側邊欄設定
 st.sidebar.header("⚙️ 設定與金鑰")
-# 直接將您的 FRED API Key 帶入 value 中，老師打開網頁就會自動載入
-fred_api_key = st.sidebar.text_input("請輸入 FRED API Key:", value="50eba7127681d7af46ea19dd3b411200", type="password")
+
+# 將您的 FRED API Key 直接寫死在後端，不顯示輸入框，別人無法更改
+fred_api_key = "50eba7127681d7af46ea19dd3b411200"
+
+# 只保留 Gemini API Key 讓使用者或老師自行輸入
 gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):", type="password")
 
 st.sidebar.divider()
@@ -77,7 +80,7 @@ if econ_df is not None and not econ_df.empty:
     st.subheader("📉 就業與利率環境聯動圖")
     st.line_chart(econ_df[['Unemployment', 'Fed_Rate']])
 else:
-    st.warning("請在左側側邊欄輸入有效的 FRED API Key 以載入完整總經與 CPI 數據。")
+    st.warning("無法載入總經與 CPI 數據，請檢查 FRED API 設定。")
 
 # 5. Gemini AI 深度總經與 CPI 預測報告區塊
 st.divider()
@@ -85,7 +88,7 @@ st.subheader("🤖 Gemini 深度總經與 CPI 預測AI報告")
 
 if st.button("生成全面 CPI 與總經分析報告"):
     if not gemini_api_key:
-        st.error("請先輸入 Gemini API Key！")
+        st.error("請先在左側側邊欄輸入您的 Gemini API Key！")
     elif econ_df is None or econ_df.empty:
         st.error("缺少經濟數據，無法執行分析。")
     else:
