@@ -18,10 +18,9 @@ def load_cpi_data(api_key):
     if not api_key:
         return None
     try:
-        # 使用 pandas_datareader 從 FRED 抓取美國消費者物價指數 (CPIAUCSL)
         df = pdr.DataReader('CPIAUCSL', 'fred', start='2015-01-01', api_key=api_key)
         df.columns = ['CPI']
-        df['YoY_Change'] = df['CPI'].pct_change(12) * 100  # 計算年增率 (YoY)
+        df['YoY_Change'] = df['CPI'].pct_change(12) * 100
         return df
     except Exception as e:
         st.error(f"取得 FRED 數據失敗: {e}")
@@ -57,11 +56,20 @@ if st.button("執行 Gemini CPI 智能分析"):
             genai.configure(api_key=gemini_api_key)
             model = genai.GenerativeModel('gemini-1.5-flash')
             
-            # 整理近 6 個月的 CPI 數據供 Gemini 分析
             recent_data = cpi_df.tail(6).to_string()
-            prompt = f"""
-            你是一位專業的總體經濟分析師。請根據以下最新的美國 CPI 數據：
-            {recent_data}
             
-            請提供以下詳細分析報告：
-            1. 當前 CPI 通
+            # 確保這裡的三重引號完整包覆
+            prompt = f"""你是一位專業的總體經濟分析師。請根據以下最新的美國 CPI 數據：
+{recent_data}
+
+請提供以下詳細分析報告：
+1. 當前 CPI 通膨趨勢解讀
+2. 對央行貨幣政策的潛在影響
+3. 未來 3 至 6 個月的 CPI 趨勢預測與主要風險因子"""
+            
+            with st.spinner("Gemini 正在分析 CPI 數據與預測趨勢..."):
+                response = model.generate_content(prompt)
+                st.markdown(response.text)
+                
+        except Exception as e:
+            st.error(f"Gemini API 調用失敗: {e}")
