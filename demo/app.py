@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from pandas_datareader import data as pdr
+import requests
 import google.generativeai as genai
 
 # 1. 網頁頁面設定
@@ -12,14 +12,27 @@ st.sidebar.header("⚙️ 設定與金鑰")
 fred_api_key = st.sidebar.text_input("請輸入 FRED API Key:", type="password")
 gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (CPI 分析用):", type="password")
 
-# 3. FRED CPI 數據擷取
+# 3. 直接透過 FRED API 取得 CPI 數據
 @st.cache_data
 def load_cpi_data(api_key):
     if not api_key:
         return None
     try:
-        df = pdr.DataReader('CPIAUCSL', 'fred', start='2015-01-01', api_key=api_key)
-        df.columns = ['CPI']
+        url = f"https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL&api_key={api_key}&file_type=json"
+        res = requests.get(url)
+        data = res.json()
+        
+        if "observations" not in data:
+            st.error("FRED API Key 可能有誤或超過請求限制。")
+            return None
+            
+        df = pd.DataFrame(data["observations"])
+        df = df[['date', 'value']].copy()
+        df['CPI'] = pd.to_numeric(df['value'], errors='coerce')
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.dropna().set_index('date')
+        df = df[['CPI']]
+        
         df['YoY_Change'] = df['CPI'].pct_change(12) * 100
         return df
     except Exception as e:
@@ -29,7 +42,7 @@ def load_cpi_data(api_key):
 cpi_df = load_cpi_data(fred_api_key)
 
 # 4. 主要內容與關鍵數據展示
-if cpi_df is not None:
+if cpi_df is not None and not cpi_df.empty:
     latest_cpi = cpi_df['CPI'].iloc[-1]
     latest_yoy = cpi_df['YoY_Change'].iloc[-1]
     
@@ -49,7 +62,7 @@ st.subheader("🤖 Gemini CPI 分析與未來的趨勢預測")
 if st.button("執行 Gemini CPI 智能分析"):
     if not gemini_api_key:
         st.error("請先輸入 Gemini API Key！")
-    elif cpi_df is None:
+    elif cpi_df is None or cpi_df.empty:
         st.error("缺少 CPI 數據，無法執行分析。")
     else:
         try:
@@ -58,7 +71,6 @@ if st.button("執行 Gemini CPI 智能分析"):
             
             recent_data = cpi_df.tail(6).to_string()
             
-            # 確保這裡的三重引號完整包覆
             prompt = f"""你是一位專業的總體經濟分析師。請根據以下最新的美國 CPI 數據：
 {recent_data}
 
