@@ -111,3 +111,4 @@ if st.button("生成全面 CPI 與總經分析報告"):
                 
         except Exception as e:
             st.error(f"Gemini API 調用失敗: {e}")
+            fred_api_key = st.sidebar.text_input("請輸入 FRED API Key:", value="50eba7127681d7af46ea19dd3b411200", type="password")
