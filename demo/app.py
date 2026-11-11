@@ -9,7 +9,8 @@ st.title("🌐 Gemini CPI 深度分析與總經預測儀表板")
 
 # 2. 側邊欄設定
 st.sidebar.header("⚙️ 設定與金鑰")
-fred_api_key = st.sidebar.text_input("請輸入 FRED API Key:", type="password")
+# 直接將您的 FRED API Key 帶入 value 中，老師打開網頁就會自動載入
+fred_api_key = st.sidebar.text_input("請輸入 FRED API Key:", value="50eba7127681d7af46ea19dd3b4112005", type="password")
 gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):", type="password")
 
 st.sidebar.divider()
@@ -111,4 +112,3 @@ if st.button("生成全面 CPI 與總經分析報告"):
                 
         except Exception as e:
             st.error(f"Gemini API 調用失敗: {e}")
-            fred_api_key = st.sidebar.text_input("請輸入 FRED API Key:", value="50eba7127681d7af46ea19dd3b411200", type="password")
