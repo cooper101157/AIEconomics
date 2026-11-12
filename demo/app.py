@@ -11,7 +11,7 @@ st.title("🌐 Gemini CPI 深度分析與總經預測儀表板")
 st.sidebar.header("⚙️ 設定與金鑰")
 
 # 將您的 FRED API Key 直接寫死在後端，不顯示輸入框，別人無法更改
-fred_api_key = "50eba7127681d7af46ea19dd3b4112005"
+fred_api_key = "50eba7127681d7af46ea19dd3b411200"
 
 # 只保留 Gemini API Key 讓使用者或老師自行輸入
 gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):", type="password")
