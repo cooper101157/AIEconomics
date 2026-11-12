@@ -11,7 +11,7 @@ st.title("🌐 Gemini CPI 深度分析與總經預測儀表板")
 st.sidebar.header("⚙️ 設定與金鑰")
 
 # 將您的 FRED API Key 直接寫死在後端，不顯示輸入框，別人無法更改
-fred_api_key = "50eba7127681d7af46ea19dd3b4112005"
+fred_api_key = "50eba7127681d7af46ea19dd3b411200"
 
 # 只保留 Gemini API Key 讓使用者或老師自行輸入
 gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):", type="password")
@@ -94,8 +94,7 @@ if st.button("生成全面 CPI 與總經分析報告"):
     else:
         try:
             genai.configure(api_key=gemini_api_key)
-            # 已更新為 gemini-3.5-flash 模型
-            model = genai.GenerativeModel('gemini-3.5-flash')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
             # 提供最近 12 個月的豐富數據給 Gemini 進行深度分析
             recent_data = econ_df.tail(12).to_string()
