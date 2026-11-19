@@ -10,11 +10,18 @@ st.title("🌐 Gemini CPI 深度分析與總經預測儀表板")
 # 2. 側邊欄設定
 st.sidebar.header("⚙️ 設定與金鑰")
 
-# 將您的 FRED API Key 直接寫死在後端（結尾無 5），不顯示輸入框，別人無法更改
+# 將您的 FRED API Key 直接寫死在後端，不顯示輸入框，別人無法更改
 fred_api_key = "50eba7127681d7af46ea19dd3b411200"
 
 # 只保留 Gemini API Key 讓使用者或老師自行輸入
 gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):", type="password")
+
+# 也可選擇 3.0 Flash 或 3.0 Pro
+gemini_model_name = st.sidebar.selectbox(
+    "選擇 Gemini 3.0 模型",
+    ["gemini-3.0-flash", "gemini-3.0-pro"],
+    index=0
+)
 
 st.sidebar.divider()
 st.sidebar.header("📊 報告參數設定")
@@ -38,7 +45,7 @@ def load_economic_data(api_key, start_date):
         
         for name, series_id in series_dict.items():
             url = f"https://api.stlouisfed.org/fred/series/observations?series_id={series_id}&api_key={api_key}&file_type=json"
-            res = requests.get(url)
+            res = requests.get(url, timeout=15)
             data = res.json()
             
             if "observations" in data:
@@ -51,11 +58,12 @@ def load_economic_data(api_key, start_date):
                     merged_df = df
                 else:
                     merged_df = merged_df.join(df, how='outer')
-                    
-        merged_df = merged_df[merged_df.index >= start_date].dropna()
-        # 計算 CPI 與 核心 CPI 的年增率 (YoY)
+        
+        # 先排序並計算 YoY，再依 start_date 篩選，確保起算日第一筆就有 12 個月前資料可算 YoY
+        merged_df = merged_df.sort_index().dropna()
         merged_df['CPI_YoY'] = merged_df['CPI'].pct_change(12) * 100
         merged_df['Core_CPI_YoY'] = merged_df['Core_CPI'].pct_change(12) * 100
+        merged_df = merged_df[merged_df.index >= start_date].dropna()
         
         return merged_df
     except Exception as e:
@@ -94,8 +102,8 @@ if st.button("生成全面 CPI 與總經分析報告"):
     else:
         try:
             genai.configure(api_key=gemini_api_key)
-            # 使用 gemini-3.5-flash 模型
-            model = genai.GenerativeModel('gemini-3.5-flash')
+            # 使用 Gemini 3.0 模型
+            model = genai.GenerativeModel(gemini_model_name)
             
             # 提供最近 12 個月的豐富數據給 Gemini 進行深度分析
             recent_data = econ_df.tail(12).to_string()
@@ -110,7 +118,7 @@ if st.button("生成全面 CPI 與總經分析報告"):
 4. **潛在風險因子**：列舉可能干擾通膨與經濟走勢的 3 個關鍵全球風險。
 5. **資產配置與市場影響建議**：針對債券、股市與總經投資人提出專業的操作指引。"""
             
-            with st.spinner("Gemini 正在調用多維度數據並撰寫深度經濟分析報告..."):
+            with st.spinner(f"{gemini_model_name} 正在調用多維度數據並撰寫深度經濟分析報告..."):
                 response = model.generate_content(prompt)
                 st.markdown(response.text)
                 
