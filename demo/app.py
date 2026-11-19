@@ -19,6 +19,8 @@ gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):
 gemini_model_name = st.sidebar.selectbox(
     "選擇 Gemini 模型",
     [
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
         "gemini-3.0-flash",
         "gemini-3.0-pro",
         "gemini-4.0-flash",
