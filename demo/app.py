@@ -14,14 +14,26 @@ st.sidebar.header("⚙️ 設定與金鑰")
 fred_api_key = "50eba7127681d7af46ea19dd3b411200"
 
 # 只保留 Gemini API Key 讓使用者或老師自行輸入
-gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):", type="password")
+gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):", type="password").strip()
 
-# 也可選擇 3.0 Flash 或 3.0 Pro
-gemini_model_name = st.sidebar.selectbox(
-    "選擇 Gemini 3.0 模型",
-    ["gemini-3.0-flash", "gemini-3.0-pro"],
+model_choice = st.sidebar.selectbox(
+    "選擇 Gemini 模型",
+    [
+        "gemini-3.0-flash",
+        "gemini-3.0-pro",
+        "gemini-4-argon",
+        "自訂輸入模型名稱..."
+    ],
     index=0
 )
+
+if model_choice == "自訂輸入模型名稱...":
+    gemini_model_name = st.sidebar.text_input(
+        "輸入模型 ID（例如未來推出的 5.0 模型代碼）",
+        value="gemini-4-argon"
+    ).strip()
+else:
+    gemini_model_name = model_choice
 
 st.sidebar.divider()
 st.sidebar.header("📊 報告參數設定")
@@ -59,7 +71,6 @@ def load_economic_data(api_key, start_date):
                 else:
                     merged_df = merged_df.join(df, how='outer')
         
-        # 先排序並計算 YoY，再依 start_date 篩選，確保起算日第一筆就有 12 個月前資料可算 YoY
         merged_df = merged_df.sort_index().dropna()
         merged_df['CPI_YoY'] = merged_df['CPI'].pct_change(12) * 100
         merged_df['Core_CPI_YoY'] = merged_df['Core_CPI'].pct_change(12) * 100
@@ -97,15 +108,15 @@ st.subheader("🤖 Gemini 深度總經與 CPI 預測AI報告")
 if st.button("生成全面 CPI 與總經分析報告"):
     if not gemini_api_key:
         st.error("請先在左側側邊欄輸入您的 Gemini API Key！")
+    elif not gemini_model_name:
+        st.error("請輸入有效的 Gemini 模型名稱！")
     elif econ_df is None or econ_df.empty:
         st.error("缺少經濟數據，無法執行分析。")
     else:
         try:
             genai.configure(api_key=gemini_api_key)
-            # 使用 Gemini 3.0 模型
             model = genai.GenerativeModel(gemini_model_name)
             
-            # 提供最近 12 個月的豐富數據給 Gemini 進行深度分析
             recent_data = econ_df.tail(12).to_string()
             
             prompt = f"""你是一位頂尖的華爾街總體經濟學家與資深數據分析師。請根據以下包含美國最新 CPI、核心 CPI、失業率及聯邦基金利率的近一年數據：
