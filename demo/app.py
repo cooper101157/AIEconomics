@@ -16,24 +16,16 @@ fred_api_key = "50eba7127681d7af46ea19dd3b411200"
 # 只保留 Gemini API Key 讓使用者或老師自行輸入
 gemini_api_key = st.sidebar.text_input("請輸入 Gemini API Key (AI 分析用):", type="password").strip()
 
-model_choice = st.sidebar.selectbox(
+gemini_model_name = st.sidebar.selectbox(
     "選擇 Gemini 模型",
     [
         "gemini-3.0-flash",
         "gemini-3.0-pro",
-        "gemini-4-argon",
-        "自訂輸入模型名稱..."
+        "gemini-4.0-flash",
+        "gemini-4.0-pro"
     ],
     index=0
 )
-
-if model_choice == "自訂輸入模型名稱...":
-    gemini_model_name = st.sidebar.text_input(
-        "輸入模型 ID（例如未來推出的 5.0 模型代碼）",
-        value="gemini-4-argon"
-    ).strip()
-else:
-    gemini_model_name = model_choice
 
 st.sidebar.divider()
 st.sidebar.header("📊 報告參數設定")
@@ -108,8 +100,6 @@ st.subheader("🤖 Gemini 深度總經與 CPI 預測AI報告")
 if st.button("生成全面 CPI 與總經分析報告"):
     if not gemini_api_key:
         st.error("請先在左側側邊欄輸入您的 Gemini API Key！")
-    elif not gemini_model_name:
-        st.error("請輸入有效的 Gemini 模型名稱！")
     elif econ_df is None or econ_df.empty:
         st.error("缺少經濟數據，無法執行分析。")
     else:
